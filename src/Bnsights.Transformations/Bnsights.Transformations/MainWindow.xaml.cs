@@ -1,6 +1,7 @@
 ﻿using Bnsights.Transformations.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -148,6 +149,37 @@ namespace Bnsights.Transformations
             }
         }
 
+        private void BtnEncryptConnectionString_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtConfigPath.Text))
+            {
+                MessageBox.Show("Config File Path is Required.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!File.Exists(txtConfigPath.Text))
+            {
+                MessageBox.Show("Invalid Config File Path.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            var configDir = System.IO.Path.GetDirectoryName(txtConfigPath.Text);
+            var command = $@"/C ASPNET_REGIIS -pef ""connectionStrings"" ""{configDir}""";
+            System.Diagnostics.Process process = new System.Diagnostics.Process();
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.FileName = "cmd.exe";
+            startInfo.WorkingDirectory = @"C:\Windows\Microsoft.NET\Framework\v4.0.30319";
+            startInfo.UseShellExecute = false;
+            startInfo.Arguments = command;
+            startInfo.Verb = "runas";
+            startInfo.RedirectStandardOutput = true;
+            startInfo.CreateNoWindow = true;
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+            string result = process.StandardOutput.ReadToEnd();
+            var image = result.ToLower().Contains("success") ? MessageBoxImage.Information : MessageBoxImage.Error;
+            MessageBox.Show(result, "Success", MessageBoxButton.OK, image);
 
+        }
     }
 }
